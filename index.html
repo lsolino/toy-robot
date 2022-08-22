@@ -1,0 +1,322 @@
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+	  <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+	  <style id="compiled-css" type="text/css">
+      .boardWrapper {
+          margin-left:auto;
+          margin-right:auto;
+          width:500px;
+          height:500px;
+          padding-top: 50px;
+      }
+
+      .board {
+          table-layout:fixed;
+          border:none;
+          border-collapse:collapse;
+          border-spacing:0px;
+          height:100%;
+          width:100%;
+      }
+
+      table.board tr td {
+          border:2px solid brown;
+      }
+
+      table.board tr:nth-of-type(odd) td:nth-of-type(odd),
+      table.board tr:nth-of-type(even) td:nth-of-type(even) {
+          background-color:white;
+      }
+
+      table.board tr:nth-of-type(even) td:nth-of-type(odd),
+      table.board tr:nth-of-type(odd) td:nth-of-type(even) {
+          background-color:black;
+      }
+
+      #wrapper {
+          position: absolute;
+      }
+
+      .welcome-msg h1 {
+          text-align: center;
+          text-transform: uppercase;
+          color: #8ebfc2;
+      }
+
+      .place-container {
+          display: -webkit-box;
+          display: -ms-flexbox;
+          display: flex;
+          -webkit-box-align: center;
+          -ms-flex-align: center;
+          align-items: center;
+          margin-bottom: 20px;
+      }
+
+      #place {
+          height: 50px;
+          margin-right: 5px;
+      }
+
+      .panel-half {
+          width: 50%;
+      }
+
+      .panel-right {
+          text-align: right;
+
+      }
+
+      .label-text {
+          padding: 10px 0;
+      }
+
+      .button-container {
+          -webkit-box-ordinal-group: 2;
+          -ms-flex-order: 1;
+          order: 1;
+          width: 500px;
+          height: 50px;
+          display: -webkit-box;
+          display: -ms-flexbox;
+          display: flex;
+          -webkit-box-pack: justify;
+          -ms-flex-pack: justify;
+          justify-content: space-between;
+      }
+
+      #robot {
+          width: 50px;
+          height: 50px;
+          border-radius: 50%;
+          font-size: 15px;
+          color: white;
+          background-color: #FF4081;
+          line-height: 50px;
+          text-align: center;
+          font-family: "Verdana";
+          font-size: 12px;
+          z-index: 1;
+          position: absolute;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="wrapper">
+      <div class="place-container">
+        <div class="panel-half panel-left">
+          <div class="label-text">
+            <label>Position X</label>
+            <select id="xPosition">
+              <option value="0">0</option>
+              <option value="1">1</option>
+              <option value="2">2</option>
+              <option value="3">3</option>
+              <option value="4">4</option>
+            </select>
+          </div>
+          <div class="label-text">
+            <label>Position Y</label>
+            <select id="yPosition">
+              <option value="0">0</option>
+              <option value="1">1</option>
+              <option value="2">2</option>
+              <option value="3">3</option>
+              <option value="4">4</option>
+            </select>
+          </div>
+          <div class="label-text">
+            <label>Direction</label>
+            <select id="direction">
+              <option value="NORTH">North</option>
+              <option value="SOUTH">South</option>
+              <option value="EAST">East</option>
+              <option value="WEST">West</option>
+            </select>
+          </div>
+        </div>
+        <div class="panel-half panel-right">
+          <button id="place">PLACE</button>
+        </div>
+      </div>
+      <div class="button-container">
+        <button id="move" disabled>MOVE</button>
+        <button id="left" disabled>LEFT</button>
+        <button id="right" disabled>RIGHT</button>
+      </div>
+      <div class="boardWrapper">
+	      <div id="robot" style="display:none;" ></div>
+        <table role="grid" class="board" id="chessBoard">
+          <tbody>
+            <tr>
+              <th id="col_0">0</th>
+              <td></td>
+              <td></td>
+              <td></td>
+              <td></td>
+              <td></td>
+            </tr>
+            <tr>
+              <th id="col_1">1</th>
+              <td></td>
+              <td></td>
+              <td></td>
+              <td></td>
+              <td></td>
+            </tr>
+            <tr>
+              <th id="col_2">2</th>
+              <td></td>
+              <td></td>
+              <td></td>
+              <td></td>
+              <td></td>
+            </tr>
+            <tr>
+              <th id="col_3">3</th>
+              <td></td>
+              <td></td>
+              <td></td>
+              <td></td>
+              <td></td>
+            </tr>
+            <tr>
+              <th id="col_4">4</th>
+              <td></td>
+              <td></td>
+              <td></td>
+              <td></td>
+              <td></td>
+            </tr>
+            <tr>
+              <th></th>
+              <th id="row_0">0</th>
+              <th id="row_1">1</th>
+              <th id="row_2">2</th>
+              <th id="row_3">3</th>
+              <th id="row_4">4</th>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <script type="text/javascript">
+      var robot = document.getElementById('robot');
+      var buttonLeft = document.getElementById('left');
+      var buttonRight = document.getElementById('right');
+      var buttonMove = document.getElementById('move');
+      var direction;
+      var topPosition = 0, leftPosition = 0;
+      var xPOS = 0, yPOS = 0 ;
+
+      $("#place").click(function() {
+        var xPosition= parseInt(document.getElementById("xPosition").value);
+        var yPosition= parseInt(document.getElementById("yPosition").value);
+        var buttonDirection = document.getElementById("direction").value;
+        xPOS = xPosition; yPOS = yPosition;
+        direction = buttonDirection;
+        topPosition = 250 + yPOS * 83;
+        leftPosition = 100 + xPOS * 83;
+        robot.style.top = topPosition+"px";
+        robot.style.left = leftPosition+"px";
+        robot.innerHTML = direction;
+        robot.style.display = "inline";
+        buttonMove.disabled = false;
+        buttonLeft.disabled = false;
+        buttonRight.disabled = false;
+        console.log('top' + topPosition);
+        console.log('left' + leftPosition);
+      });
+
+      $("#right").click(function() {
+        switch (direction) {
+          case 'NORTH':
+            console.log('Changing to East');
+            direction = 'EAST'
+            break;
+          case 'SOUTH':
+            console.log('Changing to West');
+            direction = 'WEST'
+            break;
+          case 'EAST':
+            console.log('Changing to South');
+            direction = 'SOUTH'
+            break;
+          case 'WEST':
+            console.log('Changing to North');
+            direction = 'NORTH'
+            break;
+        }
+        robot.innerHTML = direction;
+      });
+
+      $("#left").click(function() {
+        switch (direction) {
+          case 'NORTH':
+            console.log('Changing to West');
+            direction = 'WEST'
+            break;
+          case 'SOUTH':
+            console.log('Changing to East');
+            direction = 'EAST'
+            break;
+          case 'EAST':
+            console.log('Changing to North');
+            direction = 'NORTH'
+            break;
+          case 'WEST':
+            console.log('Changing to South');
+            direction = 'SOUTH'
+            break;
+        }
+        robot.innerHTML = direction;
+      });
+
+      $("#move").click(function() {
+        switch (direction) {
+          case 'NORTH':
+            console.log('Go to North');
+            newYPos = yPOS - 1;
+
+            if (newYPos >= 0) {
+                yPOS = newYPos;
+            }
+            break;
+          case 'SOUTH':
+            console.log('Go to South');
+            newYPos = yPOS + 1;
+            maxYPos = 4;
+
+            if (newYPos <= maxYPos) {
+                yPOS = newYPos;
+            }
+            break;
+          case 'EAST':
+            console.log('Go to East');
+            newXPos = xPOS + 1;
+            maxXPos = 4;
+
+            if (newXPos <= maxXPos) {
+                xPOS = newXPos;
+            }
+            break;
+          case 'WEST':
+            console.log('Go to West');
+            newXPos = xPOS - 1;
+
+            if (newXPos >= 0) {
+                xPOS = newXPos;
+            }
+            break;
+        }
+        console.log('Moving...');
+        topPosition = 250 + yPOS * 83;
+        leftPosition = 100 + xPOS * 83;
+        robot.style.top = topPosition+"px";
+        robot.style.left = leftPosition+"px";
+      });
+    </script>
+  </body>
+</html>
